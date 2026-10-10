@@ -1,0 +1,237 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  background: rgba(0, 0, 0, 0.96);
+  display: flex;
+}
+
+.overlay.hidden {
+  display: none;
+}
+
+.panel {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: clamp(1rem, 2vw, 2rem);
+  color: var(--green);
+  overflow-y: auto;
+}
+
+/* Auto margins center vertically but, unlike justify-content, let the
+   top stay reachable by scrolling when content overflows (short screens). */
+.panel > :first-child {
+  margin-top: auto;
+}
+
+.panel > :last-child {
+  margin-bottom: auto;
+}
+
+.panel h2 {
+  margin: 0 0 clamp(2rem, 4vh, 3.2rem);
+  letter-spacing: 0.3em;
+  font-size: 2rem;
+  font-weight: 400;
+  text-align: center;
+}
+
+/* Two-column grouping: left column holds what you're setting up
+   (duration), right column holds how it behaves (the on/off effects).
+   A second, dimmer grid below separates rarely-used test/debug tools
+   from the real settings above it. */
+.settings-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(260px, 340px));
+  gap: 0 3.2rem;
+  width: 100%;
+  max-width: 760px;
+}
+
+.settings-grid.secondary {
+  margin-top: 2.4rem;
+  padding-top: 1.8rem;
+  border-top: 2px solid var(--green-dim);
+  opacity: 0.6;
+}
+
+.settings-col {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  text-align: left;
+}
+
+.settings-col + .settings-col {
+  border-left: 2px solid var(--green-dim);
+  padding-left: 3.2rem;
+}
+
+.col-label {
+  margin: 0 0 1.2rem;
+  font-size: 1.2rem;
+  font-weight: 400;
+  letter-spacing: 0.25em;
+  color: var(--green-label);
+}
+
+.field-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.8rem;
+}
+
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.field-label {
+  font-size: 1.1rem;
+  letter-spacing: 0.2em;
+}
+
+.field-row .colon {
+  font-size: 2rem;
+  padding-bottom: 0.6rem;
+}
+
+.stepper {
+  display: flex;
+  align-items: stretch;
+  gap: 0.4rem;
+}
+
+.stepper-btn {
+  font-family: inherit;
+  font-size: 1.1rem;
+  width: 2.4rem;
+  background: #000;
+  color: var(--green);
+  border: 2px solid var(--green-dim);
+  border-radius: 8px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.stepper-btn:active {
+  background: var(--green-dim);
+}
+
+.panel input[type='number'] {
+  font-family: inherit;
+  font-size: 1.8rem;
+  width: 3.2rem;
+  text-align: left;
+  background: #000;
+  color: var(--green);
+  border: 2px solid var(--green-dim);
+  border-radius: 8px;
+  padding: 0.5rem 0 0.5rem 0.5rem;
+  -moz-appearance: textfield;
+}
+
+.panel input[type='number']::-webkit-inner-spin-button,
+.panel input[type='number']::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  font-size: 1.2rem;
+  letter-spacing: 0.04em;
+  padding: 0.6rem 0;
+  margin-bottom: 0.4rem;
+  cursor: pointer;
+}
+
+.checkbox-row:last-child {
+  margin-bottom: 0;
+}
+
+.checkbox-row input {
+  width: 1.8rem;
+  height: 1.8rem;
+  margin: 0;
+  flex-shrink: 0;
+  accent-color: var(--green);
+  cursor: pointer;
+}
+
+.panel-buttons {
+  display: flex;
+  gap: 1.4rem;
+  justify-content: center;
+}
+
+.primary-actions {
+  margin-top: 2.4rem;
+}
+
+.settings-col .panel-buttons {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.settings-col .ctrl-btn.wide {
+  width: 100%;
+}
+
+.stepper-btn:focus-visible,
+.panel input[type='number']:focus-visible,
+.checkbox-row input:focus-visible {
+  outline: 3px solid var(--green);
+  outline-offset: 2px;
+}
+
+#settingsTitle:focus {
+  outline: 3px solid var(--green);
+  outline-offset: 6px;
+}
+
+.about {
+  width: 100%;
+  max-width: 760px;
+  margin-top: 2.4rem;
+  padding-top: 1.6rem;
+  border-top: 2px solid var(--green-dim);
+  font-size: 1rem;
+  line-height: 1.7;
+  letter-spacing: 0.03em;
+  color: var(--green-label);
+  text-align: center;
+}
+
+.about p {
+  margin: 0.3rem 0;
+}
+
+.about a {
+  color: var(--green-label);
+  text-underline-offset: 2px;
+}
+
+.about a:focus-visible {
+  outline: 3px solid var(--green);
+  outline-offset: 2px;
+}
+
+@media (max-width: 860px) {
+  .settings-grid {
+    grid-template-columns: minmax(0, 340px);
+    justify-content: center;
+  }
+
+  .settings-col + .settings-col {
+    border-left: 0;
+    padding-left: 0;
+    margin-top: 1.6rem;
+  }
+}

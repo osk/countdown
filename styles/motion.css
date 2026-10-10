@@ -1,0 +1,26 @@
+@media (prefers-reduced-motion: reduce) {
+  .time {
+    animation: none;
+  }
+  .stage.urgent .time {
+    animation: none;
+  }
+  .stage.critical .time {
+    animation: none;
+  }
+  .flash-active .flash {
+    animation: none;
+    opacity: 0;
+  }
+  .scanline-sweep.active::after {
+    animation: none;
+  }
+  .scanline-sweep.continuous::after {
+    animation: none;
+  }
+  .display.waking {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
