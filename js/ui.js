@@ -167,6 +167,31 @@ function toggleFullscreen() {
   }
 }
 
+/**
+ * A home-screen-launched iPad/iPhone PWA still shows the system status bar
+ * (clock/wifi/battery) unless the page is ALSO put into true Fullscreen API
+ * mode — Apple provides no "truly fullscreen" web-app display mode. Safari
+ * only grants requestFullscreen() from within a real user gesture, never
+ * automatically on load, so engage it transparently on the first tap/key
+ * instead of requiring a dedicated button press.
+ */
+function bindAutoFullscreenForStandalone() {
+  if (!document.fullscreenEnabled) return;
+  const nav = /** @type {{standalone?: boolean}} */ (window.navigator);
+  const standalone = nav.standalone === true
+    || window.matchMedia('(display-mode: standalone)').matches
+    || window.matchMedia('(display-mode: fullscreen)').matches;
+  if (!standalone) return;
+
+  const engage = () => {
+    document.removeEventListener('pointerdown', engage);
+    document.removeEventListener('keydown', engage);
+    if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {});
+  };
+  document.addEventListener('pointerdown', engage, { once: true });
+  document.addEventListener('keydown', engage, { once: true });
+}
+
 // Tapping near either edge of the stage nudges time (for quick table-top
 // touch control); tapping the middle toggles play/pause. Any tap wakes
 // the display out of standby instead, regardless of where it lands.
@@ -410,6 +435,7 @@ export function initUI() {
   bindDurationStepper(secUpBtn, setSecondsInput, 1, 0, 59);
   bindDurationStepper(secDownBtn, setSecondsInput, -1, 0, 59);
   bindControlsVisibility();
+  bindAutoFullscreenForStandalone();
   // iPhone Safari has no Fullscreen API for non-video elements.
   fullscreenBtn.hidden = !document.fullscreenEnabled;
   updateMuteButton();
