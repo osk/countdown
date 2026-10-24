@@ -2,6 +2,7 @@ import { state } from './state.js';
 import {
   URGENT_AT_SECS_REMAINING,
   CRITICAL_AT_SECS_REMAINING,
+  MODE_TORCH,
 } from './constants.js';
 
 /**
@@ -48,10 +49,16 @@ export const secUpBtn = reqEl('secUpBtn');
 export const setSoundInput = reqInput('setSound');
 export const setScanlineInput = reqInput('setScanline');
 export const setGlowInput = reqInput('setGlow');
+export const setEmbersInput = reqInput('setEmbers');
+export const setFlameGlowInput = reqInput('setFlameGlow');
 export const saveSettingsBtn = reqEl('saveSettings');
 export const cancelSettingsBtn = reqEl('cancelSettings');
 export const testDingBtn = reqEl('testDing');
 export const testFinalBtn = reqEl('testFinal');
+export const modeElevatorBtn = reqEl('modeElevatorBtn');
+export const modeTorchBtn = reqEl('modeTorchBtn');
+export const effectsElevatorEl = reqEl('effectsElevator');
+export const effectsTorchEl = reqEl('effectsTorch');
 export const debugScanlineInput = reqInput('debugScanline');
 
 /**
@@ -80,6 +87,14 @@ export function render() {
     'paused',
     !state.running && !state.locked && secondsLeft !== state.totalSeconds,
   );
+
+  // Torch burns down gradually rather than only dimming in the final
+  // seconds — not meant to track in lockstep with the clock, just give a
+  // sense of the flame weakening as the hour wears on.
+  if (state.mode === MODE_TORCH && state.totalSeconds > 0) {
+    const burnFraction = Math.max(0, Math.min(1, secondsLeft / state.totalSeconds));
+    stage.style.setProperty('--torch-burn', burnFraction.toFixed(3));
+  }
 }
 
 export function updateMuteButton() {
@@ -88,5 +103,20 @@ export function updateMuteButton() {
 }
 
 export function updateGlow() {
-  stage.classList.toggle('glow', state.glowEnabled);
+  stage.classList.toggle('glow', state.glowEnabled && state.mode !== MODE_TORCH);
+  stage.classList.toggle(
+    'flame-glow',
+    state.torchGlowEnabled && state.mode === MODE_TORCH,
+  );
+}
+
+export function updateTheme() {
+  document.documentElement.classList.toggle('theme-torch', state.mode === MODE_TORCH);
+}
+
+export function updateEmbers() {
+  stage.classList.toggle(
+    'embers-active',
+    state.torchEmbersEnabled && state.mode === MODE_TORCH,
+  );
 }

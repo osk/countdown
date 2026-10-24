@@ -1,6 +1,6 @@
 import { state, persistSettings } from './state.js';
-import { minuteTick } from './audio.js';
 import { setScanlineContinuous, setScanlineEnabled } from './scanline.js';
+import { getTheme } from './themes/index.js';
 import {
   stage,
   controlsEl,
@@ -22,6 +22,12 @@ import {
   setSoundInput,
   setScanlineInput,
   setGlowInput,
+  setEmbersInput,
+  setFlameGlowInput,
+  modeElevatorBtn,
+  modeTorchBtn,
+  effectsElevatorEl,
+  effectsTorchEl,
   debugScanlineInput,
   saveSettingsBtn,
   cancelSettingsBtn,
@@ -30,6 +36,8 @@ import {
   render,
   updateMuteButton,
   updateGlow,
+  updateTheme,
+  updateEmbers,
 } from './dom.js';
 import {
   startTimer,
@@ -42,6 +50,8 @@ import {
   wakeFromStandby,
 } from './timer.js';
 import {
+  MODE_ELEVATOR,
+  MODE_TORCH,
   CONTROLS_HIDE_MS,
   LOWER_QUADRANT_RATIO,
   STAGE_TOUCH_ZONE_RATIO,
@@ -60,6 +70,8 @@ let settingsTrigger = null; // element to return focus to when the dialog closes
 // Set on pointerdown when the tap only reveals hidden controls, so the same
 // tap doesn't also pause/nudge/wake via the stage click.
 let revealingControls = false;
+// Mode selection is pending (like duration) until Settings is saved.
+let pendingMode = state.mode;
 
 function showControls() {
   controlsEl.classList.add('visible');
@@ -102,7 +114,29 @@ function trapFocus(e) {
   }
 }
 
-/** @returns {number} total seconds, clamped to the field bounds (falls back to 600 if zero) */
+/**
+ * Mode toggle in Settings previews that mode's remembered duration
+ * immediately, but doesn't touch state until Save (same as duration).
+ * @param {'elevator'|'torch'} mode
+ */
+function selectPendingMode(mode) {
+  pendingMode = mode;
+  const isTorch = mode === MODE_TORCH;
+  modeElevatorBtn.classList.toggle('active', !isTorch);
+  modeTorchBtn.classList.toggle('active', isTorch);
+  modeElevatorBtn.setAttribute('aria-checked', String(!isTorch));
+  modeTorchBtn.setAttribute('aria-checked', String(isTorch));
+  const seconds = isTorch ? state.torchTotalSeconds : state.elevatorTotalSeconds;
+  setMinutesInput.value = String(Math.floor(seconds / 60));
+  setSecondsInput.value = String(seconds % 60);
+  // Each theme offers its own effects — the LCD scanline sweep/glow don't
+  // fit a grim unlit torch, which gets a drifting-embers effect instead.
+  effectsElevatorEl.hidden = isTorch;
+  effectsTorchEl.hidden = !isTorch;
+  debugScanlineInput.disabled = isTorch;
+}
+
+/** @returns {number} total seconds, clamped to the field bounds (falls back to the active theme's default if zero) */
 function readPendingDuration() {
   const minutes = Math.max(
     0,
@@ -113,27 +147,38 @@ function readPendingDuration() {
     Math.min(59, parseInt(setSecondsInput.value, 10) || 0),
   );
   const total = minutes * 60 + seconds;
-  return total > 0 ? total : 600;
+  if (total > 0) return total;
+  const fallback = getTheme(pendingMode);
+  return fallback.defaultMinutes * 60 + fallback.defaultSeconds;
 }
 
 function applyPendingSettings() {
-  state.totalSeconds = readPendingDuration();
+  state.mode = pendingMode;
+  const total = readPendingDuration();
+  state.totalSeconds = total;
+  if (pendingMode === MODE_TORCH) state.torchTotalSeconds = total;
+  else state.elevatorTotalSeconds = total;
   state.soundEnabled = setSoundInput.checked;
   state.scanlineEnabled = setScanlineInput.checked;
   setScanlineEnabled(state.scanlineEnabled);
   state.glowEnabled = setGlowInput.checked;
+  state.torchEmbersEnabled = setEmbersInput.checked;
+  state.torchGlowEnabled = setFlameGlowInput.checked;
   updateGlow();
+  updateEmbers();
   updateMuteButton();
+  updateTheme();
   persistSettings();
 }
 
 function openSettings() {
   state.wasRunningBeforeSettings = suspendTimer();
-  setMinutesInput.value = String(Math.floor(state.totalSeconds / 60));
-  setSecondsInput.value = String(state.totalSeconds % 60);
+  selectPendingMode(state.mode);
   setSoundInput.checked = state.soundEnabled;
   setScanlineInput.checked = state.scanlineEnabled;
   setGlowInput.checked = state.glowEnabled;
+  setEmbersInput.checked = state.torchEmbersEnabled;
+  setFlameGlowInput.checked = state.torchGlowEnabled;
   settingsTrigger =
     document.activeElement instanceof HTMLElement
       ? document.activeElement
@@ -246,6 +291,16 @@ function bindControls() {
 
   overlay.addEventListener('click', (e) => e.stopPropagation());
 
+  modeElevatorBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    selectPendingMode(MODE_ELEVATOR);
+  });
+
+  modeTorchBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    selectPendingMode(MODE_TORCH);
+  });
+
   saveSettingsBtn.addEventListener('click', () => {
     applyPendingSettings();
     resetTimer();
@@ -258,7 +313,7 @@ function bindControls() {
 
   testDingBtn.addEventListener('click', (e) => {
     e.stopPropagation();
-    minuteTick();
+    getTheme(pendingMode).minuteTick();
   });
 
   testFinalBtn.addEventListener('click', () => {
@@ -440,5 +495,7 @@ export function initUI() {
   fullscreenBtn.hidden = !document.fullscreenEnabled;
   updateMuteButton();
   updateGlow();
+  updateEmbers();
+  updateTheme();
   render();
 }

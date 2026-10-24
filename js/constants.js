@@ -1,6 +1,12 @@
 export const STORAGE_KEY = 'lcd-fullscreen-countdown-settings';
+
+export const MODE_ELEVATOR = 'elevator';
+export const MODE_TORCH = 'torch';
+
 export const DEFAULT_MINUTES = 10;
 export const DEFAULT_SECONDS = 0;
+export const TORCH_DEFAULT_MINUTES = 60;
+export const TORCH_DEFAULT_SECONDS = 0;
 
 // When we change to "dramatic" countdown
 export const URGENT_AT_SECS_REMAINING = 5;
@@ -33,7 +39,7 @@ export const NUDGE_ACCEL_FACTOR = 1.6;
 export const STAGE_TOUCH_ZONE_RATIO = 0.28;
 
 // Length of wakeup animation.
-// Must match the `crtPowerOn` keyframes duration in styles/effects.css.
+// Must match the `crtPowerOn` keyframes duration in styles/themes/elevator.css.
 export const STANDBY_WAKE_MS = 700;
 
 // Settings duration steppers
@@ -44,3 +50,16 @@ export const DURATION_STEP_REPEAT_MS = 150;
 export const SCANLINE_SWEEP_MIN_MS = 6000;
 export const SCANLINE_SWEEP_MAX_MS = 20000;
 export const SCANLINE_SWEEP_DURATION_MS = 1100;
+
+// Torch theme: how long the "gutters out to black" burnout animation/sound
+// runs before we drop into standby, and how long the relight ignition
+// animation/sound runs before the countdown actually starts.
+// Must match the `torchDie`/`torchIgnite` keyframe durations in
+// styles/themes/torch.css.
+export const TORCH_EXTINGUISH_MS = 2000;
+export const TORCH_IGNITE_MS = 1100;
+
+// Random creak/settle sound while the torch is out, same irregular-interval
+// shape as the scanline sweep above.
+export const TORCH_CREAK_MIN_MS = 4000;
+export const TORCH_CREAK_MAX_MS = 11000;

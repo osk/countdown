@@ -42,8 +42,57 @@
       <div class="display" id="display">
         <div class="time-ghost" aria-hidden="true">88:88</div>
         <div id="time" class="time">10:00</div>
+        <div class="embers" id="embers" aria-hidden="true">
+          <span class="ember"></span>
+          <span class="ember"></span>
+          <span class="ember"></span>
+          <span class="ember"></span>
+          <span class="ember"></span>
+          <span class="ember"></span>
+          <span class="ember"></span>
+          <span class="ember"></span>
+        </div>
       </div>
     </div>
+    <script>
+      // Apply the persisted theme and duration before first paint, so
+      // reloading into a saved TORCH session doesn't flash the default
+      // green elevator look (or vice versa) for a frame. Keep the parsed
+      // keys in sync with STORAGE_KEY's shape in js/state.js.
+      (function () {
+        try {
+          var raw = localStorage.getItem(
+            'lcd-fullscreen-countdown-settings',
+          );
+          var saved = raw ? JSON.parse(raw) : null;
+          var isTorch = !!saved && saved.mode === 'torch';
+          if (isTorch) document.documentElement.classList.add('theme-torch');
+          var minutes = isTorch
+            ? Number.isFinite(saved && saved.torchMinutes)
+              ? saved.torchMinutes
+              : 60
+            : Number.isFinite(saved && saved.elevatorMinutes)
+              ? saved.elevatorMinutes
+              : 10;
+          var seconds = isTorch
+            ? Number.isFinite(saved && saved.torchSeconds)
+              ? saved.torchSeconds
+              : 0
+            : Number.isFinite(saved && saved.elevatorSeconds)
+              ? saved.elevatorSeconds
+              : 0;
+          var timeEl = document.getElementById('time');
+          if (timeEl) {
+            timeEl.textContent =
+              String(minutes).padStart(2, '0') +
+              ':' +
+              String(seconds).padStart(2, '0');
+          }
+        } catch (e) {
+          // localStorage blocked — defaults already rendered.
+        }
+      })();
+    </script>
 
     <div class="controls" id="controls">
       <button
@@ -103,6 +152,27 @@
     >
       <div class="panel">
         <h2 id="settingsTitle" tabindex="-1">SETTINGS</h2>
+
+        <div class="mode-toggle" role="radiogroup" aria-label="Countdown mode">
+          <button
+            type="button"
+            class="mode-btn active"
+            id="modeElevatorBtn"
+            role="radio"
+            aria-checked="true"
+          >
+            ELEVATOR
+          </button>
+          <button
+            type="button"
+            class="mode-btn"
+            id="modeTorchBtn"
+            role="radio"
+            aria-checked="false"
+          >
+            TORCH · SHADOWDARK
+          </button>
+        </div>
 
         <div class="settings-grid">
           <section class="settings-col">
@@ -176,13 +246,25 @@
               ><input id="setSound" type="checkbox" checked /> SOUND
               ENABLED</label
             >
-            <label class="checkbox-row"
-              ><input id="setScanline" type="checkbox" checked /> SCANLINE
-              EFFECT</label
-            >
-            <label class="checkbox-row"
-              ><input id="setGlow" type="checkbox" /> LCD GLOW EFFECT</label
-            >
+            <div id="effectsElevator" class="theme-effects">
+              <label class="checkbox-row"
+                ><input id="setScanline" type="checkbox" checked /> SCANLINE
+                EFFECT</label
+              >
+              <label class="checkbox-row"
+                ><input id="setGlow" type="checkbox" /> LCD GLOW EFFECT</label
+              >
+            </div>
+            <div id="effectsTorch" class="theme-effects" hidden>
+              <label class="checkbox-row"
+                ><input id="setEmbers" type="checkbox" checked /> EMBERS
+                EFFECT</label
+              >
+              <label class="checkbox-row"
+                ><input id="setFlameGlow" type="checkbox" /> FLAME GLOW
+                EFFECT</label
+              >
+            </div>
           </section>
         </div>
 
@@ -218,6 +300,12 @@
             the display — tap anywhere to wake it.
           </p>
           <p>
+            TORCH mode (Settings → Mode) reskins this as a Shadowdark torch:
+            dark red on black, a 60-minute burn by default, and it gutters
+            out to black at zero instead of looping — tap the dark screen to
+            relight it.
+          </p>
+          <p>
             COUNTDOWN — built for
             <a href="https://www.tuesdayknightgames.com/products/decagone"
               >DECAGONE</a
@@ -229,6 +317,16 @@
               >keshikan</a
             >, licensed under the
             <a href="/fonts/DSEG-LICENSE.txt" target="_blank" rel="noopener"
+              >SIL Open Font License 1.1</a
+            >.
+          </p>
+          <p>
+            Torch-mode digit font "Cutive Mono" by the Cutive Mono Project,
+            licensed under the
+            <a
+              href="/fonts/CutiveMono-LICENSE.txt"
+              target="_blank"
+              rel="noopener"
               >SIL Open Font License 1.1</a
             >.
           </p>

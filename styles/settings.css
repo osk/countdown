@@ -39,6 +39,37 @@
   text-align: center;
 }
 
+.mode-toggle {
+  display: flex;
+  gap: 1rem;
+  width: 100%;
+  max-width: 760px;
+  margin-bottom: clamp(1.6rem, 3vh, 2.4rem);
+}
+
+.mode-btn {
+  flex: 1;
+  font-family: inherit;
+  font-size: 1rem;
+  letter-spacing: 0.12em;
+  padding: 1rem;
+  background: #000;
+  color: var(--green-label);
+  border: 2px solid var(--green-dim);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.mode-btn.active {
+  color: var(--green);
+  border-color: var(--green);
+}
+
+.mode-btn:focus-visible {
+  outline: 3px solid var(--green);
+  outline-offset: 2px;
+}
+
 /* Two-column grouping: left column holds what you're setting up
    (duration), right column holds how it behaves (the on/off effects).
    A second, dimmer grid below separates rarely-used test/debug tools
@@ -165,6 +196,15 @@
   cursor: pointer;
 }
 
+.checkbox-row:has(input:disabled) {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.checkbox-row:has(input:disabled) input {
+  cursor: not-allowed;
+}
+
 .panel-buttons {
   display: flex;
   gap: 1.4rem;
@@ -233,5 +273,9 @@
     border-left: 0;
     padding-left: 0;
     margin-top: 1.6rem;
+  }
+
+  .mode-toggle {
+    flex-direction: column;
   }
 }

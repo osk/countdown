@@ -1,20 +1,8 @@
 import { state } from './state.js';
-import { render, stage, displayEl } from './dom.js';
-import {
-  primeAudio,
-  minuteTick,
-  urgentTick,
-  zeroAlarm,
-  elevatorArrival,
-} from './audio.js';
-import {
-  URGENT_AT_SECS_REMAINING,
-  ZERO_ALARM_MS,
-  ALARM_SILENCE_MS,
-  DOOR_SOUND_DELAY_MS,
-  FINAL_BREATHER_MS,
-  STANDBY_WAKE_MS,
-} from './constants.js';
+import { render, stage } from './dom.js';
+import { primeAudio } from './audio.js';
+import { getTheme } from './themes/index.js';
+import { URGENT_AT_SECS_REMAINING } from './constants.js';
 import { requestWakeLock } from './wakeLock.js';
 
 function frame() {
@@ -28,14 +16,15 @@ function frame() {
   if (secondsLeft !== state.lastWholeSecond) {
     state.lastWholeSecond = secondsLeft;
     render();
+    const theme = getTheme(state.mode);
     if (secondsLeft > 0 && secondsLeft <= URGENT_AT_SECS_REMAINING) {
-      urgentTick(secondsLeft);
+      theme.finalTick(secondsLeft);
     } else if (
       secondsLeft > 0 &&
       secondsLeft % 60 === 0 &&
       secondsLeft !== state.totalSeconds
     ) {
-      minuteTick();
+      theme.minuteTick();
     }
   }
 
@@ -83,8 +72,10 @@ function haltTimer() {
   state.running = false;
   state.locked = false;
   state.lastWholeSecond = null;
-  displayEl.classList.remove('waking');
-  stage.classList.remove('urgent', 'critical', 'flash-active');
+  stage.classList.remove('urgent', 'critical');
+  const theme = getTheme(state.mode);
+  theme.exitDarkness();
+  theme.clearTransientClasses();
 }
 
 export function resetTimer() {
@@ -110,7 +101,7 @@ export function suspendTimer() {
 /**
  * Reset to the configured duration and black the screen out entirely,
  * armed and waiting — a deliberate "powered down" state rather than the
- * instant reset. Only Space (wakeFromStandby) breaks out of it.
+ * instant reset. Only a tap/Space (wakeFromStandby) breaks out of it.
  */
 export function enterStandby() {
   haltTimer();
@@ -118,28 +109,21 @@ export function enterStandby() {
   state.standby = true;
   render();
   stage.classList.add('standby');
+  getTheme(state.mode).enterDarkness();
 }
 
 /**
- * Break out of standby: play the arrival chime, run the CRT power-on
- * fade-in on the display, then start the countdown once it has fully
- * resolved so the timer doesn't visibly start while still mid-fade.
+ * Break out of standby: each theme owns its own relight choreography
+ * (sound + visual class), then starts the countdown once it has fully
+ * resolved so it doesn't visibly start while still mid-animation.
  */
 export function wakeFromStandby() {
   if (!state.standby) return;
   state.standby = false;
   stage.classList.remove('standby');
-  displayEl.classList.add('waking');
-  // primeAudio() must be *called* synchronously within the triggering
-  // gesture, but a context constructed this same tick can still be
-  // 'suspended' — wait for it to actually resume before scheduling the
-  // chime, or the first tone can get silently swallowed.
-  primeAudio().then(() => elevatorArrival());
-  state.wakeTimeout = setTimeout(() => {
-    state.wakeTimeout = null;
-    displayEl.classList.remove('waking');
-    startTimer();
-  }, STANDBY_WAKE_MS);
+  const theme = getTheme(state.mode);
+  theme.exitDarkness();
+  theme.runWakeSequence(() => startTimer());
 }
 
 /**
@@ -181,32 +165,7 @@ function onZero() {
   stage.classList.remove('urgent', 'critical');
   render();
 
-  // Reach zero, flash and sound alarm
-  stage.classList.add('flash-active');
-  zeroAlarm();
-
-  state.zeroTimeout = setTimeout(() => {
-    stage.classList.remove('flash-active');
-
-    // Delay after we hit zero
-    state.zeroTimeout = setTimeout(() => {
-      // Reset the display to the configured duration first...
-      state.remainingMs = state.totalSeconds * 1000;
-      state.lastWholeSecond = null;
-      render();
-
-      // ...then, after a beat of seeing the timer the door opens again
-      state.zeroTimeout = setTimeout(() => {
-        elevatorArrival();
-
-        // Final breather before starting again
-        state.zeroTimeout = setTimeout(() => {
-          state.locked = false;
-          startTimer();
-        }, FINAL_BREATHER_MS);
-      }, DOOR_SOUND_DELAY_MS);
-    }, ALARM_SILENCE_MS);
-  }, ZERO_ALARM_MS);
+  getTheme(state.mode).runZeroSequence({ startTimer, enterStandby });
 }
 
 /**

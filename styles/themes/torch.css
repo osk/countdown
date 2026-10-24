@@ -1,0 +1,389 @@
+/**
+ * Shadowdark torch theme — grim dark red-on-black re-theme, a monospaced
+ * typewriter digit face instead of the LCD, and the burnout (zero) /
+ * relight (standby wake) choreography unique to it. See
+ * styles/themes/elevator.css for the default look this overrides, and
+ * js/themes/torch.js for the matching JS.
+ */
+
+html.theme-torch {
+  --green: #c81e1e;
+  --green-dim: #4a0a0a;
+  --green-label: #8a2a2a;
+  --amber: #ff6a1a;
+}
+
+html.theme-torch .time-ghost,
+html.theme-torch .time {
+  font-family: 'Cutive Mono', ui-monospace, monospace;
+}
+
+/* The CRT scanline texture and sweeping beam are LCD artifacts — replaced
+   by the rising-embers effect below for a grim, firelit screen instead. */
+html.theme-torch .scanlines,
+html.theme-torch .scanline-sweep {
+  display: none;
+}
+
+html.theme-torch .time-ghost {
+  color: rgba(130, 10, 10, 0.07);
+}
+
+html.theme-torch .time {
+  animation: torchFlicker 4.5s infinite;
+  /* Dims gradually as the torch burns down (set via --torch-burn each
+     tick in dom.js#render) — independent of the flicker animation above,
+     which only varies opacity. */
+  filter: brightness(calc(0.5 + 0.5 * var(--torch-burn, 1)));
+  transition:
+    color 0.2s ease,
+    text-shadow 0.2s ease,
+    filter 1.1s linear;
+}
+
+html.theme-torch .stage.urgent .time-ghost {
+  color: rgba(255, 106, 26, 0.07);
+}
+
+html.theme-torch .stage.urgent .time {
+  animation: torchGutter 0.9s ease-in-out infinite;
+}
+
+html.theme-torch .stage.critical .time-ghost {
+  color: rgba(255, 34, 0, 0.09);
+}
+
+html.theme-torch .stage.critical .time {
+  color: #ff2200;
+  animation: torchGutter 0.4s ease-in-out infinite;
+}
+
+/* Flame glow — torch's take on the elevator's LCD GLOW EFFECT, opt-in for
+   the same reason (blurred text-shadow can show rendering artifacts).
+   Drifts upward like the embers it's connected to, rather than jittering
+   in every direction — a slow, mostly-vertical breathing glow that grows
+   hotter and taller through urgent/critical. */
+.stage.flame-glow .time {
+  text-shadow:
+    0 -2px 16px var(--amber),
+    0 -6px 38px var(--green),
+    0 -12px 80px rgba(200, 30, 30, 0.35),
+    0 -2px 130px rgba(255, 106, 26, 0.16);
+  animation:
+    torchFlicker 4.5s infinite,
+    flameGlowFlicker 3.2s ease-in-out infinite;
+}
+
+.stage.flame-glow.urgent .time {
+  text-shadow:
+    0 -3px 18px var(--amber),
+    0 -8px 44px #ff8a3a,
+    0 -16px 100px rgba(255, 106, 26, 0.45),
+    0 -3px 150px rgba(255, 34, 0, 0.2);
+  animation:
+    torchGutter 0.9s ease-in-out infinite,
+    flameGlowFlickerUrgent 1.4s ease-in-out infinite;
+}
+
+.stage.flame-glow.critical .time {
+  text-shadow:
+    0 -4px 22px #ff2200,
+    0 -10px 54px #ff6a1a,
+    0 -20px 120px rgba(255, 34, 0, 0.55),
+    0 -4px 170px rgba(255, 106, 26, 0.28);
+  animation:
+    torchGutter 0.4s ease-in-out infinite,
+    flameGlowFlickerCritical 0.8s ease-in-out infinite;
+}
+
+@keyframes flameGlowFlicker {
+  0%,
+  100% {
+    text-shadow:
+      0 -2px 16px var(--amber),
+      0 -6px 38px var(--green),
+      0 -12px 80px rgba(200, 30, 30, 0.35),
+      0 -2px 130px rgba(255, 106, 26, 0.16);
+  }
+  50% {
+    text-shadow:
+      0 -4px 20px var(--amber),
+      0 -10px 46px var(--green),
+      0 -18px 95px rgba(200, 30, 30, 0.4),
+      0 -4px 145px rgba(255, 106, 26, 0.2);
+  }
+}
+
+@keyframes flameGlowFlickerUrgent {
+  0%,
+  100% {
+    text-shadow:
+      0 -3px 18px var(--amber),
+      0 -8px 44px #ff8a3a,
+      0 -16px 100px rgba(255, 106, 26, 0.45),
+      0 -3px 150px rgba(255, 34, 0, 0.2);
+  }
+  50% {
+    text-shadow:
+      0 -5px 22px var(--amber),
+      0 -12px 52px #ff8a3a,
+      0 -22px 115px rgba(255, 106, 26, 0.5),
+      0 -5px 165px rgba(255, 34, 0, 0.24);
+  }
+}
+
+@keyframes flameGlowFlickerCritical {
+  0%,
+  100% {
+    text-shadow:
+      0 -4px 22px #ff2200,
+      0 -10px 54px #ff6a1a,
+      0 -20px 120px rgba(255, 34, 0, 0.55),
+      0 -4px 170px rgba(255, 106, 26, 0.28);
+  }
+  50% {
+    text-shadow:
+      0 -6px 26px #ff2200,
+      0 -14px 62px #ff6a1a,
+      0 -26px 135px rgba(255, 34, 0, 0.6),
+      0 -6px 185px rgba(255, 106, 26, 0.32);
+  }
+}
+
+@keyframes torchFlicker {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  7% {
+    opacity: 0.88;
+  }
+  14% {
+    opacity: 1;
+  }
+  29% {
+    opacity: 0.93;
+  }
+  41% {
+    opacity: 1;
+  }
+  52% {
+    opacity: 0.8;
+  }
+  58% {
+    opacity: 1;
+  }
+  73% {
+    opacity: 0.9;
+  }
+  86% {
+    opacity: 1;
+  }
+}
+
+@keyframes torchGutter {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  22% {
+    opacity: 0.55;
+  }
+  40% {
+    opacity: 1;
+  }
+  58% {
+    opacity: 0.35;
+  }
+  75% {
+    opacity: 0.9;
+  }
+  90% {
+    opacity: 0.6;
+  }
+}
+
+/* Burnout: the torch gutters to black over a few seconds instead of the
+   elevator's flash/alarm, then js/timer.js drops it into standby to wait
+   for a relighting tap. Duration must match TORCH_EXTINGUISH_MS. */
+.stage.torch-extinguishing .time {
+  animation: torchDie 2s ease-in forwards;
+}
+
+.stage.torch-extinguishing .time-ghost {
+  transition: opacity 2s ease-in;
+  opacity: 0;
+}
+
+.stage.torch-extinguishing .vignette {
+  transition: background 2s ease-in;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(40, 0, 0, 0.2) 0%,
+    rgba(0, 0, 0, 1) 90%
+  );
+}
+
+@keyframes torchDie {
+  0% {
+    opacity: 1;
+    color: #ff2200;
+  }
+  20% {
+    opacity: 0.75;
+  }
+  35% {
+    opacity: 1;
+    color: #c81e1e;
+  }
+  55% {
+    opacity: 0.3;
+  }
+  68% {
+    opacity: 0.6;
+  }
+  82% {
+    opacity: 0.1;
+  }
+  100% {
+    opacity: 0;
+    color: #1a0000;
+  }
+}
+
+/* Relight: a rough, catching-light burst rather than the elevator's smooth
+   CRT power-on. Duration must match TORCH_IGNITE_MS. */
+.stage.torch-igniting .time {
+  animation: torchIgnite 1.1s cubic-bezier(0.2, 0.85, 0.3, 1) both;
+}
+
+@keyframes torchIgnite {
+  0% {
+    opacity: 0;
+    color: #1a0000;
+  }
+  10% {
+    opacity: 0.5;
+    color: #ff6a1a;
+  }
+  18% {
+    opacity: 0.08;
+  }
+  30% {
+    opacity: 0.85;
+    color: #ff6a1a;
+  }
+  44% {
+    opacity: 0.25;
+  }
+  60% {
+    opacity: 1;
+    color: #c81e1e;
+  }
+  78% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 1;
+    color: #c81e1e;
+  }
+}
+
+/* Embers: anchored to the digits' own grid cell (not the whole stage) so
+   they read as sparks coming off the glowing numbers, rising and fading
+   well past them. A slow, continuous drift — ambient atmosphere rather
+   than a precise, per-second effect. Settings > EMBERS EFFECT (torch's
+   equivalent of the elevator's scanline sweep). */
+.embers {
+  grid-area: 1 / 1;
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.6s ease;
+}
+
+.stage.embers-active .embers {
+  opacity: 1;
+}
+
+.stage.standby .embers,
+.stage.torch-extinguishing .embers {
+  opacity: 0;
+  transition: opacity 2s ease-in;
+}
+
+.ember {
+  position: absolute;
+  bottom: -10%;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: #ff8a3a;
+  box-shadow: 0 0 6px 2px rgba(255, 106, 26, 0.8);
+  opacity: 0;
+  animation: emberRise linear infinite;
+}
+
+.ember:nth-child(1) {
+  left: 8%;
+  animation-duration: 9s;
+  animation-delay: 0s;
+}
+.ember:nth-child(2) {
+  left: 24%;
+  animation-duration: 11s;
+  animation-delay: 2.5s;
+}
+.ember:nth-child(3) {
+  left: 38%;
+  animation-duration: 8s;
+  animation-delay: 5s;
+}
+.ember:nth-child(4) {
+  left: 55%;
+  animation-duration: 10s;
+  animation-delay: 1s;
+}
+.ember:nth-child(5) {
+  left: 68%;
+  animation-duration: 12s;
+  animation-delay: 6.5s;
+}
+.ember:nth-child(6) {
+  left: 80%;
+  animation-duration: 9.5s;
+  animation-delay: 3.5s;
+}
+.ember:nth-child(7) {
+  left: 46%;
+  animation-duration: 11.5s;
+  animation-delay: 8s;
+}
+.ember:nth-child(8) {
+  left: 90%;
+  animation-duration: 8.5s;
+  animation-delay: 4.5s;
+}
+
+@keyframes emberRise {
+  0% {
+    transform: translate(0, 0) scale(0.6);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.9;
+  }
+  50% {
+    transform: translate(10px, -55vh) scale(1);
+    opacity: 0.6;
+  }
+  85% {
+    opacity: 0.3;
+  }
+  100% {
+    transform: translate(-12px, -105vh) scale(0.3);
+    opacity: 0;
+  }
+}

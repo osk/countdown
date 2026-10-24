@@ -89,6 +89,48 @@ function tone(
   }
 }
 
+/**
+ * @typedef {Object} NoiseOpts
+ * @property {number} [duration]
+ * @property {number} [gain]
+ * @property {number} [when] - seconds from now
+ * @property {number|null} [lowpass] - cutoff Hz, or null to skip
+ */
+
+/** Short burst of filtered white noise — crackle, hiss, sputter, creak. */
+/** @param {NoiseOpts} [opts] */
+function noiseBurst({ duration = 0.15, gain = 0.2, when = 0, lowpass = 2000 } = {}) {
+  if (!state.soundEnabled) return;
+  const ctx = ensureAudio();
+  const t0 = ctx.currentTime + when;
+
+  const bufferSize = Math.max(1, Math.ceil(ctx.sampleRate * duration));
+  const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+
+  const src = ctx.createBufferSource();
+  src.buffer = buffer;
+
+  const amp = ctx.createGain();
+  amp.gain.setValueAtTime(0, t0);
+  amp.gain.linearRampToValueAtTime(gain, t0 + 0.01);
+  amp.gain.exponentialRampToValueAtTime(0.0001, t0 + duration);
+
+  /** @type {AudioNode} */
+  let output = src;
+  if (lowpass) {
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.value = lowpass;
+    output.connect(filter);
+    output = filter;
+  }
+  output.connect(amp).connect(ctx.destination);
+  src.start(t0);
+  src.stop(t0 + duration + 0.02);
+}
+
 /** Tick on the minute mark */
 export function minuteTick() {
   tone(130.81, {
@@ -205,4 +247,78 @@ export function zeroAlarm() {
   sub.connect(subGain).connect(ctx.destination);
   sub.start(t0);
   sub.stop(t0 + duration + 0.05);
+}
+
+/**
+ * Shadowdark torch theme sounds — fire crackle and low dread instead of
+ * clean synth tones. Timing/CSS choreography live in js/themes/torch.js;
+ * these are just the single-shot sound primitives it reaches for.
+ */
+
+/** Guttering flame in the final seconds before it dies. */
+/** @param {number} secondsLeft */
+export function torchGutterSound(secondsLeft) {
+  const intensity =
+    (URGENT_AT_SECS_REMAINING - secondsLeft) / URGENT_AT_SECS_REMAINING;
+  noiseBurst({
+    duration: 0.22 + intensity * 0.1,
+    gain: 0.16 + intensity * 0.12,
+    lowpass: 1300 - intensity * 500,
+  });
+  tone(68 + intensity * 18, {
+    duration: 0.3,
+    gain: 0.1 + intensity * 0.1,
+    type: 'sine',
+    overtones: [],
+  });
+}
+
+/** A quiet crackle/pop marking a minute passing, in place of the elevator's bell. */
+export function torchCracklePopSound() {
+  noiseBurst({ duration: 0.12, gain: 0.08, lowpass: 2600 });
+}
+
+/** The torch sputters out: a dying hiss under a slow, ominous drone swell. */
+export function torchExtinguishSound() {
+  if (!state.soundEnabled) return;
+  noiseBurst({ duration: 1.1, gain: 0.3, lowpass: 500 });
+
+  const ctx = ensureAudio();
+  const t0 = ctx.currentTime;
+  const osc = ctx.createOscillator();
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(60, t0);
+  osc.frequency.exponentialRampToValueAtTime(36, t0 + 2.2);
+
+  const gain = ctx.createGain();
+  gain.gain.setValueAtTime(0, t0);
+  gain.gain.linearRampToValueAtTime(0.22, t0 + 0.3);
+  gain.gain.linearRampToValueAtTime(0.0001, t0 + 2.4);
+
+  osc.connect(gain).connect(ctx.destination);
+  osc.start(t0);
+  osc.stop(t0 + 2.5);
+}
+
+/** A faint settling creak/whisper while the torch is out. */
+export function torchCreakSound() {
+  noiseBurst({
+    duration: 0.5 + Math.random() * 0.4,
+    gain: 0.05,
+    lowpass: 350 + Math.random() * 300,
+  });
+}
+
+/** Catching light: a whoosh, a few crackling pops, then it steadies. */
+export function torchIgniteSound() {
+  if (!state.soundEnabled) return;
+  noiseBurst({ duration: 0.4, gain: 0.32, lowpass: 3200 });
+  for (let i = 0; i < 4; i++) {
+    noiseBurst({
+      duration: 0.08 + Math.random() * 0.05,
+      gain: 0.12,
+      when: 0.3 + i * 0.12,
+      lowpass: 1800,
+    });
+  }
 }

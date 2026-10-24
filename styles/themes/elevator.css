@@ -1,0 +1,157 @@
+/**
+ * Elevator theme — the original LCD floor-indicator look. This is the
+ * default skin: these rules are unscoped (no body class needed), and
+ * styles/themes/torch.css opts out of them by overriding the same
+ * selectors under html.theme-torch, or by using its own
+ * torch-extinguishing/torch-igniting classes instead of these zero/wake
+ * ones.
+ */
+
+.time-ghost {
+  color: rgba(51, 255, 78, 0.035);
+  transition: color 0.4s linear;
+}
+
+.time {
+  color: var(--green);
+  transition:
+    color 0.2s ease,
+    text-shadow 0.2s ease;
+  animation: flicker 6s infinite;
+}
+
+/* Glow/"backlight bleed" effect — opt-in (Settings > LCD GLOW EFFECT)
+   since large blurred text-shadow can show rendering artifacts on some
+   displays/GPUs. */
+.stage.glow .time {
+  text-shadow:
+    0 0 20px var(--green),
+    0 0 48px var(--green),
+    0 0 120px rgba(51, 255, 78, 0.5);
+}
+
+.stage.urgent .time-ghost {
+  color: rgba(255, 176, 0, 0.035);
+}
+
+.stage.urgent .time {
+  color: var(--amber);
+  animation: breathe 1.6s ease-in-out infinite;
+}
+
+.stage.glow.urgent .time {
+  text-shadow:
+    0 0 16px var(--amber),
+    0 0 36px var(--amber),
+    0 0 80px rgba(255, 176, 0, 0.45);
+}
+
+.stage.critical .time-ghost {
+  color: rgba(255, 34, 34, 0.04);
+}
+
+.stage.critical .time {
+  color: var(--red);
+  animation: breathe 0.8s ease-in-out infinite;
+}
+
+.stage.glow.critical .time {
+  text-shadow:
+    0 0 20px var(--red),
+    0 0 44px var(--red),
+    0 0 100px rgba(255, 34, 34, 0.5);
+}
+
+@keyframes breathe {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.72;
+  }
+}
+
+@keyframes flicker {
+  0%,
+  96%,
+  100% {
+    opacity: 1;
+  }
+  97% {
+    opacity: 0.88;
+  }
+  98% {
+    opacity: 1;
+  }
+  99% {
+    opacity: 0.92;
+  }
+}
+
+/* Zero moment: flash white, pulse red, alarm. JS then loops back into
+   another countdown with no input required — see
+   js/themes/elevator.js#runZeroSequence. */
+.flash {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  background: var(--red);
+  opacity: 0;
+}
+
+.flash-active .flash {
+  animation: flashPulse 1.8s ease-out 1;
+}
+
+@keyframes flashPulse {
+  0% {
+    opacity: 0;
+  }
+  5% {
+    opacity: 0.9;
+    background: #fff;
+  }
+  15% {
+    opacity: 0.15;
+    background: var(--red);
+  }
+  30% {
+    opacity: 0.55;
+  }
+  45% {
+    opacity: 0.1;
+  }
+  60% {
+    opacity: 0.35;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* Standby wake: smooth CRT power-on fade/scale-in. Duration must match
+   STANDBY_WAKE_MS in js/constants.js. */
+.display.waking {
+  animation: crtPowerOn 0.7s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+
+@keyframes crtPowerOn {
+  0% {
+    opacity: 0;
+    transform: scaleY(0.02) scaleX(0.4);
+  }
+  12% {
+    opacity: 1;
+    transform: scaleY(0.02) scaleX(1);
+  }
+  35% {
+    opacity: 1;
+    transform: scaleY(1) scaleX(1);
+  }
+  100% {
+    opacity: 1;
+    transform: scaleY(1) scaleX(1);
+  }
+}

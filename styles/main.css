@@ -3,4 +3,6 @@
 @import './effects.css';
 @import './controls.css';
 @import './settings.css';
+@import './themes/elevator.css';
+@import './themes/torch.css';
 @import './motion.css';

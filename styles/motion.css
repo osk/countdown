@@ -23,4 +23,34 @@
     opacity: 1;
     transform: none;
   }
+  html.theme-torch .time {
+    animation: none;
+  }
+  html.theme-torch .stage.urgent .time {
+    animation: none;
+  }
+  html.theme-torch .stage.critical .time {
+    animation: none;
+  }
+  .stage.torch-extinguishing .time {
+    animation: none;
+    opacity: 0;
+  }
+  .stage.torch-igniting .time {
+    animation: none;
+    opacity: 1;
+  }
+  .ember {
+    animation: none;
+    opacity: 0;
+  }
+  .stage.flame-glow .time {
+    animation: none;
+  }
+  .stage.flame-glow.urgent .time {
+    animation: none;
+  }
+  .stage.flame-glow.critical .time {
+    animation: none;
+  }
 }

@@ -17,7 +17,9 @@
 }
 
 /* Both layers share one grid cell so the dim "all segments on" backdrop
-   sits exactly behind the lit digits, like a real LCD panel. */
+   sits exactly behind the lit digits, like a real LCD panel. Color and
+   flicker/urgent/critical animation are theme-specific — see
+   styles/themes/elevator.css and styles/themes/torch.css. */
 .time-ghost,
 .time {
   grid-area: 1 / 1;
@@ -31,88 +33,6 @@
   user-select: none;
 }
 
-.time-ghost {
-  color: rgba(51, 255, 78, 0.035);
-  transition: color 0.4s linear;
-}
-
-.time {
-  color: var(--green);
-  transition:
-    color 0.2s ease,
-    text-shadow 0.2s ease;
-  animation: flicker 6s infinite;
-}
-
-/* Glow/"backlight bleed" effect — opt-in (Settings > LCD GLOW EFFECT)
-   since large blurred text-shadow can show rendering artifacts on some
-   displays/GPUs. */
-.stage.glow .time {
-  text-shadow:
-    0 0 20px var(--green),
-    0 0 48px var(--green),
-    0 0 120px rgba(51, 255, 78, 0.5);
-}
-
-.stage.urgent .time-ghost {
-  color: rgba(255, 176, 0, 0.035);
-}
-
-.stage.urgent .time {
-  color: var(--amber);
-  animation: breathe 1.6s ease-in-out infinite;
-}
-
-.stage.glow.urgent .time {
-  text-shadow:
-    0 0 16px var(--amber),
-    0 0 36px var(--amber),
-    0 0 80px rgba(255, 176, 0, 0.45);
-}
-
-.stage.critical .time-ghost {
-  color: rgba(255, 34, 34, 0.04);
-}
-
-.stage.critical .time {
-  color: var(--red);
-  animation: breathe 0.8s ease-in-out infinite;
-}
-
-.stage.glow.critical .time {
-  text-shadow:
-    0 0 20px var(--red),
-    0 0 44px var(--red),
-    0 0 100px rgba(255, 34, 34, 0.5);
-}
-
 .stage.paused .time {
   opacity: 0.55;
-}
-
-@keyframes breathe {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.72;
-  }
-}
-
-@keyframes flicker {
-  0%,
-  96%,
-  100% {
-    opacity: 1;
-  }
-  97% {
-    opacity: 0.88;
-  }
-  98% {
-    opacity: 1;
-  }
-  99% {
-    opacity: 0.92;
-  }
 }
